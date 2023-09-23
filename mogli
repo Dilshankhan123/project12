@@ -1,0 +1,166 @@
+import tkinter
+import tkinter.messagebox as messagebox
+import pymysql
+
+
+def insert():
+    Name = e_Name.get()
+    id = e_id.get()
+    phone = e_phone.get()
+    if Name == "" or id == "" or phone == "":
+        messagebox.showinfo("Insert status", "All fields are required to be filled")
+    else:
+        try:
+            con = pymysql.connect(host="localhost", user="root", password="", db="jeeja")
+            cursor = con.cursor()
+            cursor.execute("INSERT INTO mogli (name, id, phone) VALUES (%s, %s, %s)", (Name, id, phone))
+
+            con.commit()
+            e_Name.delete(0, 'end')
+            e_id.delete(0, 'end')
+            e_phone.delete(0, 'end')
+            show()
+            messagebox.showinfo("Insert status", "Data inserted successfully")
+        except pymysql.Error as e:
+            messagebox.showerror("Insert Error", f"Error: {str(e)}")
+        finally:
+            con.close()
+def delete():
+    if e_id.get() == "":
+        messagebox.showinfo("Delete status", "ID is compulsory for deletion")
+    else:
+        try:
+            con = pymysql.connect(host="localhost", user="root", password="", db="jeeja")
+            cursor = con.cursor()
+            cursor.execute("DELETE FROM mogli WHERE id = %s", (e_id.get(),))
+            con.commit()
+            e_Name.delete(0, 'end')
+            e_id.delete(0, 'end')
+            e_phone.delete(0, 'end')
+            show()
+            messagebox.showinfo("Delete status", "Data deleted successfully")
+        except pymysql.Error as e:
+            messagebox.showerror("Delete Error", f"Error: {str(e)}")
+        finally:
+            con.close()
+
+
+def update():
+    Name = e_Name.get()
+    id = e_id.get()
+    phone = e_phone.get()
+
+    if Name == "" or id == "" or phone == "":
+        messagebox.showinfo("Update status", "All fields are required to be filled")
+    else:
+        try:
+            con = pymysql.connect(host="localhost", user="root", password="", db="jeeja")
+            cursor = con.cursor()
+
+            # Construct and execute the SQL update statement
+            sql = "UPDATE mogli SET name = %s, phone = %s WHERE id = %s"
+            cursor.execute(sql, (Name, phone, id))
+
+            con.commit()
+            e_Name.delete(0, 'end')
+            e_id.delete(0, 'end')
+            e_phone.delete(0, 'end')
+            con.close()
+
+            messagebox.showinfo("Update status", "Data updated successfully")
+        except pymysql.Error as e:
+            messagebox.showerror("Update Error", f"Error: {str(e)}")
+
+
+def show():
+    con = pymysql.connect(host="localhost", user="root", password="", db="jeeja")
+    cursor = con.cursor()
+    cursor.execute("SELECT * FROM mogli")
+    rows = cursor.fetchall()
+
+    # Clear the Listbox
+    my_listbox.delete(0, tkinter.END)
+
+    for row in rows:
+        insert_data = str(row[0]) + '  ' + str(row[1]) + '  ' + str(row[2])  # Adjust this to match your table columns
+        my_listbox.insert(tkinter.END, insert_data)
+
+    con.close()
+
+def get():
+    if e_id.get() == "":
+        messagebox.showinfo("Fetch status", "ID is compulsory for fetching data")
+    else:
+        try:
+            con = pymysql.connect(host="localhost", user="root", password="", db="jeeja")
+            cursor = con.cursor()
+
+            
+            cursor.execute("SELECT * FROM  mogli WHERE id = %s", (e_id.get(),))
+            row = cursor.fetchone()  
+
+            if row:
+                
+                e_Name.delete(0, tkinter.END)  
+                e_Name.insert(0, row[0])  
+                e_phone.delete(0, tkinter.END)  
+                e_phone.insert(0, row[2])  
+            else:
+                messagebox.showinfo("Fetch status", "No record found for this ID")
+
+        except pymysql.Error as e:
+            messagebox.showerror("Fetch Error", f"Error: {str(e)}")
+        finally:
+            con.close()
+
+
+
+root = tkinter.Tk()
+root.geometry("700x500")
+root.title("Developed by Dilshan")
+
+
+name_label = tkinter.Label(root, text="Enter a name:", font=('bold', 15))
+name_label.place(x=20, y=45)
+
+
+id_label = tkinter.Label(root, text="Enter an ID:", font=('bold', 15))
+id_label.place(x=20, y=75)
+
+
+phone_label = tkinter.Label(root, text="Enter a phone:", font=('bold', 15))
+phone_label.place(x=20, y=105)
+
+e_Name = tkinter.Entry(root, font=('bold', 15), bd=5, bg="pink")
+e_Name.place(x=180, y=45)
+
+
+e_id = tkinter.Entry(root, font=('bold', 15), bd=5, bg="pink")
+e_id.place(x=180, y=75)
+
+
+e_phone = tkinter.Entry(root, font=('bold', 15), bd=5, bg="pink")
+e_phone.place(x=180, y=105)
+
+
+insert = tkinter.Button(root, text="Insert", font=('italic', 15), bg="red", bd=5, fg="white",command=insert)
+insert.place(x=138, y=228)
+
+delete = tkinter.Button(root, text="Delete", font=('italic', 15), bg="red", bd=5, fg="white",command=delete)
+delete.place(x=238, y=228)
+
+update = tkinter.Button(root, text="Update", font=('italic', 15), bg="red", bd=5, fg="white", command=update)
+update.place(x=338, y=228)
+
+
+get = tkinter.Button(root, text="Get", font=('italic', 15), bg="red", bd=5, fg="white",command=get)
+get.place(x=438, y=228)
+
+
+my_listbox = tkinter.Listbox(root)
+my_listbox.place(x=520, y=30)
+show()
+
+
+
+root.mainloop()
